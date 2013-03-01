@@ -116,6 +116,17 @@ QString convert(const char* src, uchar* dest,
         returnStr="rgba8888";
 
     }
+    else if (pSize == 5) {
+        quint32 i, j;
+        pSize = 4;
+        for(i=0, j=0; i < dataSize; i+=pSize, j+=4) {
+            dest[j]     = src[i+3]; //b
+            dest[j+1]   = src[i+2]; //g
+            dest[j+2]   = src[i+1]; //r
+            dest[j+3]   = src[i]; //a
+        }
+        returnStr="argb8888";
+    }
     return returnStr;
 }
 
@@ -154,12 +165,13 @@ void fileParse(const QString& fname,int myType = 0) {
                     myType = 2;
                     pixelSize = 2;
                 }
-                else if (pixelSize == 5) {
-                    pixelSize = 4;
-                }
+
                 quint32 imageSize = width*height*pixelSize;
                 if (pixelSize ==0x20 || pixelSize == 0x21) {
                     imageSize = width*height/2;
+                }
+                else if(pixelSize == 5) {
+                    imageSize = width*height*4;
                 }
                 //srcf.seek(srcf.pos()+0x28);
                 srcf.seek(srcf.size() - imageDataSize);
