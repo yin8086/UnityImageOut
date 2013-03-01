@@ -15,4 +15,8 @@ Qt library
     2 = rgb565
 
 * Batch Mode with multithreading
+    
     automatically transform the *.bin file in the current folder Using Alpha8,rgba4444,rgb888,rgba8888
+
+## Download Pages
+[google code](https://code.google.com/p/unityimagesuite/downloads/list)
