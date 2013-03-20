@@ -156,59 +156,66 @@ void fileParse(const QString& fname,int myType = 0) {
         quint32 pixelSize;
         br>>width>>height>>imageDataSize>>pixelSize;
 
+        //printf("%d, %d, %d, %d\n", width, height, imageDataSize, pixelSize);
         //quint32 testSize=srcf.pos()+0x28+imageDataSize;
         //if(srcf.size()-4 <= testSize && testSize <= srcf.size()){
-        if(srcf.size() > imageDataSize + 20 && imageDataSize > 0) {
-            if ( (1 <= pixelSize && pixelSize <=7 && pixelSize != 6) ||
-                    ( pixelSize == 0x20 ||pixelSize == 0x21) ){
-                if (pixelSize == 7) {
-                    myType = 2;
-                    pixelSize = 2;
-                }
+        try {
+            if(srcf.size() > imageDataSize + 20 && imageDataSize > 0) {
+                if ( (1 <= pixelSize && pixelSize <=7 && pixelSize != 6) ||
+                        ( pixelSize == 0x20 ||pixelSize == 0x21) ){
+                    if (pixelSize == 7) {
+                        myType = 2;
+                        pixelSize = 2;
+                    }
 
-                quint32 imageSize = width*height*pixelSize;
-                if (pixelSize ==0x20 || pixelSize == 0x21) {
-                    imageSize = width*height/2;
-                }
-                else if(pixelSize == 5) {
-                    imageSize = width*height*4;
-                }
-                //srcf.seek(srcf.pos()+0x28);
-                srcf.seek(srcf.size() - imageDataSize);
+                    quint32 imageSize = width*height*pixelSize;
+                    if (pixelSize ==0x20 || pixelSize == 0x21) {
+                        imageSize = width*height/2;
+                    }
+                    else if(pixelSize == 5) {
+                        imageSize = width*height*4;
+                    }
+                    //srcf.seek(srcf.pos()+0x28);
+                    srcf.seek(srcf.size() - imageDataSize);
 
-                char* originTable=new char[imageSize];
-                br.readRawData(originTable,imageSize);
-                uchar* pixelTable=new uchar[width*height*4];
-                QString typeStr;
-                if (pixelSize ==0x20 || pixelSize == 0x21) {
-                    //PVRTDecompressPVRTC(originTable,0,width,height,pixelTable);
-                    pvrtc_decompress(pixelTable,originTable,width,height,0,1,0);
-                    //changeEndian(pixelTable,width*height*4);
-                    typeStr = "PVRTC4";
+                    char* originTable=new char[imageSize];
+                    br.readRawData(originTable,imageSize);
+                    uchar* pixelTable=new uchar[width*height*4];
+                    QString typeStr;
+                    if (pixelSize ==0x20 || pixelSize == 0x21) {
+                        //PVRTDecompressPVRTC(originTable,0,width,height,pixelTable);
+                        pvrtc_decompress(pixelTable,originTable,width,height,0,1,0);
+                        //changeEndian(pixelTable,width*height*4);
+                        typeStr = "PVRTC4";
+                    }
+                    else {
+                        typeStr=convert(originTable, pixelTable, imageSize, pixelSize, myType);
+                    }
+
+                    QImage im(pixelTable,width,height,QImage::Format_ARGB32);
+                    im=im.mirrored(false,true)/*.rgbSwapped()*/;
+                    //QFileInfo forName(srcf);
+                    QString baseName=srcf.fileName().left(srcf.fileName().indexOf("."));
+                    im.save(QObject::tr("%1_%2.png").arg(baseName).arg(typeStr));
+                    printf(QObject::tr("%1 in %2 Completed!\n").arg(srcf.fileName())
+                           .arg(typeStr).toLatin1().data());
+                    delete [] pixelTable;
+                    delete [] originTable;
                 }
                 else {
-                    typeStr=convert(originTable, pixelTable, imageSize, pixelSize, myType);
+                    printf("%s Unknown format %02x!\n",
+                           srcf.fileName().toLatin1().data(), pixelSize);
                 }
-
-                QImage im(pixelTable,width,height,QImage::Format_ARGB32);
-                im=im.mirrored(false,true)/*.rgbSwapped()*/;
-                //QFileInfo forName(srcf);
-                QString baseName=srcf.fileName().left(srcf.fileName().indexOf("."));
-                im.save(QObject::tr("%1_%2.png").arg(baseName).arg(typeStr));
-                printf(QObject::tr("%1 in %2 Completed!\n").arg(srcf.fileName())
-                       .arg(typeStr).toLatin1().data());
-                delete [] pixelTable;
-                delete [] originTable;
             }
             else {
-                printf("%s Unknown format!\n",
+                printf("%s Not an image!\n",
                        srcf.fileName().toLatin1().data());
             }
         }
-        else {
-            printf("%s Not an image!\n",
-                   srcf.fileName().toLatin1().data());
+        catch(std::exception) {
+            printf("File Invalid\n");
         }
+
         srcf.close();
     }
     else {
