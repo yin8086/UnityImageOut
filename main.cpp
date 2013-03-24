@@ -194,9 +194,8 @@ void fileParse(const QString& fname,int myType = 0) {
 
                     QImage im(pixelTable,width,height,QImage::Format_ARGB32);
                     im=im.mirrored(false,true)/*.rgbSwapped()*/;
-                    //QFileInfo forName(srcf);
-                    QString baseName=srcf.fileName().left(srcf.fileName().indexOf("."));
-                    im.save(QObject::tr("%1_%2.png").arg(baseName).arg(typeStr));
+                    //QString baseName=srcf.fileName().left(srcf.fileName().indexOf("."));
+                    im.save(QObject::tr("%1.%2.png").arg(srcf.fileName()).arg(typeStr));
                     printf(QObject::tr("%1 in %2 Completed!\n").arg(srcf.fileName())
                            .arg(typeStr).toLatin1().data());
                     delete [] pixelTable;
