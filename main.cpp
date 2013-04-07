@@ -67,6 +67,7 @@ QString convert(const char* src, uchar* dest,
                 //rgba4444
                 if(i == 0) {
                     returnStr="rgba4444";
+
                 }
                 dest[j]     = (((tmpData&0xf0)>>4)*255+7)/15; //b
                 dest[j+1]   = (((tmpData&0xf00)>>8)*255+7)/15; //g
@@ -93,6 +94,17 @@ QString convert(const char* src, uchar* dest,
                 dest[j+2]   = (((tmpData&0xf800)>>11)*255+15)/31; //r
                 dest[j+3]   = 0xff; //a
 
+            }
+            else if(type == 3) {
+                //argb4444
+                if(i == 0) {
+                    returnStr="argb4444";
+                }
+
+                dest[j]   = ((tmpData&0xf)*255+7)/15; //b
+                dest[j+1]     = (((tmpData&0xf0)>>4)*255+7)/15; //g
+                dest[j+2]   = (((tmpData&0xf00)>>8)*255+7)/15; //r
+                dest[j+3]   = (((tmpData&0xf000)>>12)*255+7)/15; //a
             }
         }
     }
@@ -264,6 +276,7 @@ int main(int argc, char *argv[])
                 fileParse(argv[1], sptype);
         }
         else {
+        printf("3 = argb4444\n");
 
             QStringList files = QFileDialog::getOpenFileNames(
                                     0,
