@@ -28,7 +28,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include <QCoreApplication>
+#include <QApplication>
 #include <QDataStream>
 #include <QFile>
 #include <QImage>
@@ -36,6 +36,8 @@
 #include <QStringList>
 #include <QDir>
 #include <QRunnable>
+#include <QSettings>
+#include <QFileDialog>
 
 #include "pvrtc_dll.h"
 
@@ -237,46 +239,49 @@ void MyRun::run() {
 
 int main(int argc, char *argv[])
 {
-    QCoreApplication a(argc, argv);
-    
-    if (argc == 2) {
-        fileParse(argv[1],0);
+    QApplication a(argc, argv);
+    QSettings settings("UnitySuite.ini", QSettings::IniFormat);
+    int sptype;
 
+    if(!QFile::exists("UnitySuite.ini")) {
+        settings.setValue("16bpp", 0);
+        sptype = 0;
     }
-    else if (argc ==3) {
-        fileParse(argv[1],QString(argv[2]).toInt());
+
+    if((sptype = settings.value("16bpp").toInt()) < 0 || sptype > 3)  {
+        printf("Unknown 16bpp type in INI file\n");
     }
+
     else {
-        printf("Now running in batch mode\n");
-        printf("automatically transform the *.bin file\n");
-        printf("in the current folder\n");
-        printf("Using Alpha8,rgba4444,rgb888,rgba8888\n");
-        printf("========================================\n");
+        if (argc == 2) {
+            fileParse(argv[1],sptype);
 
-        printf("Also Available in Single File Mode\n");
-        printf("UnityImageOut.exe *.* [type]\n");
-        printf("[type] only take effect when the texture is 16bpp\n");
-        printf("type will be 0, i.e. rgba4444 when not set\n");
-        printf("1 = argb1555\n");
-        printf("2 = rgb565\n");
-
-
-        QDir curPath=QDir::current();
-        QStringList filter;
-        //QList<QFuture<void> > reList;
-        filter<<"*.bin";
-        curPath.setFilter(QDir::Files | QDir::Hidden | QDir::NoSymLinks);
-        curPath.setNameFilters(filter);
-        curPath.setSorting(QDir::Name);
-
-        foreach(const QString &fn, curPath.entryList()) {
-            MyRun* tmpR=new MyRun(fn,0);
-            tmpR->setAutoDelete(true);
-            QThreadPool::globalInstance()->start(tmpR);
         }
+        else if (argc ==3) {
+            if((sptype = QString(argv[2]).toInt()) < 0 || sptype > 3)
+                printf("Unknown 16bpp type %s\n", argv[2]);
+            else
+                fileParse(argv[1], sptype);
+        }
+        else {
+
+            QStringList files = QFileDialog::getOpenFileNames(
+                                    0,
+                                    QObject::tr("Select one or more files to open"),
+                                    QDir::current().absolutePath(),
+                                    QObject::tr("All files (*.*)"));
 
 
+            foreach(const QString &fn, files) {
+                MyRun* tmpR=new MyRun(fn, sptype);
+                tmpR->setAutoDelete(true);
+                QThreadPool::globalInstance()->start(tmpR);
+            }
+
+
+        }
     }
+
     return 0;
     //return a.exec();
 }

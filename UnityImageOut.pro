@@ -14,7 +14,7 @@ CONFIG   -= app_bundle
 
 TEMPLATE = app
 SOURCES += main.cpp
-
+QT += widgets
 HEADERS += \
     pvrtc_dll.h
 
