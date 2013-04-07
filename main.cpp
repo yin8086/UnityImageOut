@@ -40,13 +40,14 @@
 #include <QFileDialog>
 #include <QMutex>
 
+
 QMutex mutex;
 
 #include "pvrtc_dll.h"
 
 void threadPrintf(const QString& dst) {
     mutex.lock();
-    printf(dst.toLatin1().data());
+    printf(dst.toLocal8Bit().data());
     mutex.unlock();
 }
 
@@ -216,29 +217,29 @@ void fileParse(const QString& fname,int myType = 0) {
                     QImage im(pixelTable,width,height,QImage::Format_ARGB32);
                     im=im.mirrored(false,true)/*.rgbSwapped()*/;
                     //QString baseName=srcf.fileName().left(srcf.fileName().indexOf("."));
-                    im.save(QString("%1.%2.png").arg(srcf.fileName()).arg(typeStr));
-                    threadPrintf(QString("%1 in %2 Completed!\n").arg(srcf.fileName())
+                    im.save(QObject::tr("%1.%2.png").arg(srcf.fileName()).arg(typeStr));
+                    threadPrintf(QObject::tr("%1 in %2 Completed!\n").arg(srcf.fileName())
                                  .arg(typeStr));
                     delete [] pixelTable;
                     delete [] originTable;
                 }
                 else {
-                    threadPrintf(QString("%1 Unknown format 0x%2!\n").arg(srcf.fileName())
+                    threadPrintf(QObject::tr("%1 Unknown format 0x%2!\n").arg(srcf.fileName())
                                  .arg(pixelSize, 0, 16));
                 }
             }
             else {
-                threadPrintf(QString("%1 Not an image!\n").arg(srcf.fileName()));
+                threadPrintf(QObject::tr("%1 Not an image!\n").arg(srcf.fileName()));
             }
         }
         catch(std::exception) {
-            threadPrintf(QString("File Invalid\n"));
+            threadPrintf(QObject::tr("File Invalid\n"));
         }
 
         srcf.close();
     }
     else {
-        threadPrintf(QString("File not exist!\n"));
+        threadPrintf(QObject::tr("File not exist!\n"));
     }
 }
 
@@ -304,10 +305,12 @@ int main(int argc, char *argv[])
             QStringList files = QFileDialog::getOpenFileNames(
                                     0,
                                     QObject::tr("Select one or more files to open"),
-                                    QDir::current().absolutePath(),
+                                    settings.value("dir", QDir::current().absolutePath()).toString(),
                                     QObject::tr("All files (*.*)"));
 
-
+            if(files.length() > 0) {
+                settings.setValue("dir",files[0].left(files[0].lastIndexOf('/')));
+            }
             foreach(const QString &fn, files) {
                 MyRun* tmpR=new MyRun(fn, sptype);
                 tmpR->setAutoDelete(true);
