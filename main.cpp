@@ -255,6 +255,24 @@ int main(int argc, char *argv[])
     QSettings settings("UnitySuite.ini", QSettings::IniFormat);
     int sptype;
 
+    printf("Work in 3 modes:\n");
+    printf("1. UnityImageOut.exe\n"
+           "\tUse file dialog to select multi files"
+           "with 16bpp settings in UnitySuite.ini\n");
+
+    printf("2. UnityImageOut.exe *.*\n"
+           "\tTransform *.* with 16bpp settings in UnitySuite.ini\n");
+
+    printf("3. UnityImageOut.exe *.* type\n"
+           "\tTransform *.* with type as 16bpp settings\n");
+
+    printf("~.16bpptype\n"
+           "\t0 = rgba4444\n"
+           "\t1 = argb1555\n"
+           "\t2 = rgb565\n"
+           "\t3 = argb4444\n");
+
+
     if(!QFile::exists("UnitySuite.ini")) {
         settings.setValue("16bpp", 0);
         sptype = 0;
@@ -276,7 +294,6 @@ int main(int argc, char *argv[])
                 fileParse(argv[1], sptype);
         }
         else {
-        printf("3 = argb4444\n");
 
             QStringList files = QFileDialog::getOpenFileNames(
                                     0,
