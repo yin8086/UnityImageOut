@@ -38,10 +38,17 @@
 #include <QRunnable>
 #include <QSettings>
 #include <QFileDialog>
+#include <QMutex>
+
+QMutex mutex;
 
 #include "pvrtc_dll.h"
 
-//#include "PVRTDecompress.h"
+void threadPrintf(const QString& dst) {
+    mutex.lock();
+    printf(dst.toLatin1().data());
+    mutex.unlock();
+}
 
 QString convert(const char* src, uchar* dest,
              quint32 dataSize, int pSize,
@@ -209,30 +216,29 @@ void fileParse(const QString& fname,int myType = 0) {
                     QImage im(pixelTable,width,height,QImage::Format_ARGB32);
                     im=im.mirrored(false,true)/*.rgbSwapped()*/;
                     //QString baseName=srcf.fileName().left(srcf.fileName().indexOf("."));
-                    im.save(QObject::tr("%1.%2.png").arg(srcf.fileName()).arg(typeStr));
-                    printf(QObject::tr("%1 in %2 Completed!\n").arg(srcf.fileName())
-                           .arg(typeStr).toLatin1().data());
+                    im.save(QString("%1.%2.png").arg(srcf.fileName()).arg(typeStr));
+                    threadPrintf(QString("%1 in %2 Completed!\n").arg(srcf.fileName())
+                                 .arg(typeStr));
                     delete [] pixelTable;
                     delete [] originTable;
                 }
                 else {
-                    printf("%s Unknown format %02x!\n",
-                           srcf.fileName().toLatin1().data(), pixelSize);
+                    threadPrintf(QString("%1 Unknown format 0x%2!\n").arg(srcf.fileName())
+                                 .arg(pixelSize, 0, 16));
                 }
             }
             else {
-                printf("%s Not an image!\n",
-                       srcf.fileName().toLatin1().data());
+                threadPrintf(QString("%1 Not an image!\n").arg(srcf.fileName()));
             }
         }
         catch(std::exception) {
-            printf("File Invalid\n");
+            threadPrintf(QString("File Invalid\n"));
         }
 
         srcf.close();
     }
     else {
-        printf("File not exist!\n");
+        threadPrintf(QString("File not exist!\n"));
     }
 }
 
